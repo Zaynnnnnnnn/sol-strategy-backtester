@@ -36,3 +36,30 @@ Install:
 
 ```bash
 pip install -r requirements.txt
+Run a backtest:
+
+python -m src.cli --symbol SOL-USD --period 6mo --interval 1h
+Run the optimizer:
+
+python -m src.cli --optimize
+Run tests:
+
+python -m pytest -q
+Limitations
+Long-only
+
+Simple position sizing (full capital)
+
+No walk-forward validation / out-of-sample testing
+
+Not connected to live execution
+
+Disclaimer
+For research and educational purposes only. Not financial advice.
+
+
+Commit:
+```powershell
+git add README.md
+git commit -m "docs: improve README formatting and add usage"
+git push
