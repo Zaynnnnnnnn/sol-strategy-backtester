@@ -1,46 +1,86 @@
-# SOL Trading Strategy Backtester (SMA + RSI)
+SOL Strategy Backtester
 
-This repo contains a small Python backtester I wrote to sanity-check a simple rule-based strategy on **SOL-USD** using historical candles.
+This project is a small but structured backtesting engine I built to evaluate rule-based trading strategies on historical crypto data.
+The goal wasn’t to build a “money printer.” It was to build something clean, realistic, and easy to extend — while avoiding common beginner mistakes like look-ahead bias and unrealistic fills.
 
-It does **not** place live trades. The goal was to practice:
-- turning “trading intuition” into deterministic rules
-- basic risk management (TP/SL)
-- measuring outcomes (return, win-rate, trade count)
+What the strategy does
+The current implementation uses:
+A short/long Simple Moving Average crossover
+RSI as confirmation
+Percentage-based take profit and stop loss
+It’s long-only and fully deploys capital on entry.
+Signals are generated on candle t, and trades execute on candle t+1 open.
+That small detail is important — it prevents using information that wouldn’t have been available in live trading.
+Fees and slippage are also modeled to make results more realistic.
 
-## Strategy (what it does)
-**Data:** historical SOL-USD candles pulled via `yfinance` (configurable window).  
-**Signals:**
-- **Enter (buy):** short SMA crosses above long SMA **and** RSI is above a threshold (momentum filter).
-- **Exit (sell):**
-  - take-profit at **+5%**
-  - stop-loss at **-1%**
+What the engine tracks
+Equity curve (mark-to-market)
+Trade log
+Trade-level returns
+Sharpe ratio
+Max drawdown
+Profit factor
+Win rate
+The idea is to focus not just on return, but on risk and consistency.
 
-The script walks candle-by-candle, simulates entries/exits, and prints a summary (final value, P/L, return %, win rate).
+Example run (SOL-USD, 6mo, 1h)
+Final Value: $11,384.05
+Return:      13.84%
+Trades:      28
+Win Rate:    32.14%
+Max DD:      -56.25%
+Sharpe:      3.38
 
-> Note: the default parameters reflect what I tested at the time. They’re easy to change in the script.
+The relatively high drawdown reflects the limitations of simple crossover systems, especially in choppy markets. That’s expected and highlights where further improvements could be made.
+Project structure
+src/
+ ├── backtest.py      # Execution engine
+ ├── strategy.py      # Signal logic
+ ├── data.py          # Historical data loader
+ ├── metrics.py       # Performance calculations
+ ├── optimizer.py     # Grid search over parameters
+ ├── cli.py           # Command-line interface
+ ├── plot_equity.py   # Equity curve visualization
 
-## Files
-- `sol_bot.py` — runs the backtest for a single set of parameters
-- `optimiser_sol.py` — runs simple parameter sweeps to compare outcomes
+tests/
+ └── test_backtest.py
 
-## How to run
-1. Create a virtual environment (recommended)
-2. Install dependencies:
-   ```bash
-   pip install yfinance pandas numpy
-Run:
-python sol_bot.py
+The code is intentionally modular so components (strategy, execution model, metrics) can be swapped or extended independently.
 
-What I learned
+How to run
+Install dependencies:
+pip install -r requirements.txt
 
-Backtests can look “great” for the wrong reasons (bad assumptions, look-ahead bias, unrealistic fills).
-Small changes in thresholds (SMA windows, RSI cutoff, TP/SL) can change results a lot.
-You need to validate both logic (is the rule correct?) and measurement (is ROI computed correctly?).
+Run a backtest:
+python -m src.cli --symbol SOL-USD --period 6mo --interval 1h
 
-Limitations (current)
-This is not live trading (no exchange connectivity, no order execution, no slippage/fees modeling by default).
-It hasn’t been stress-tested on real-time streams; it’s a historical backtest sandbox.
-Strategy is intentionally simple — it’s a baseline, not a production system.
+
+Run the optimizer:
+python -m src.cli --optimize
+
+
+Generate an equity curve plot:
+python -m src.plot_equity
+
+
+Run tests:
+python -m pytest -q
+
+Limitations
+This is intentionally simple. Some current limitations:
+Long-only
+No position sizing logic beyond full capital deployment
+No walk-forward validation
+No regime filtering
+Not connected to live execution
+If extended further, I would look into volatility filters, risk-adjusted sizing, and out-of-sample validation.
+
+Why I built this
+I wanted to better understand:
+How execution assumptions affect performance
+How easily backtests can become biased
+How to structure a small research system cleanly
+It’s a learning project, but built with realistic assumptions and testing in mind.
 
 Disclaimer
-Educational project only. Not financial advice.
+For research and educational purposes only. Not financial advice.
